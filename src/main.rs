@@ -13,7 +13,7 @@ async fn main() {
     });
     let handler: Handler = Handler;
 
-    let mut client = Client::builder(config.token, config.intents).event_handler(handler).await.expect("Err creating client.");
+    let mut client = Client::builder(config.token, GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT).event_handler(handler).await.expect("Err creating client.");
 
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);

@@ -1,3 +1,5 @@
+use std::fs;
+use std::error::Error;
 use std::env;
 
 use serenity::async_trait;
@@ -5,23 +7,23 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
+use serde::Deserialize;
+
+#[derive(Deserialize)]
 pub struct Config {
-    pub token: String,
-    pub intents: GatewayIntents
+    pub token: String
 }
 
 impl Config {
-    pub fn build() -> Result<Config, &'static str> {
-        let token: String = match env::var("DISCORD_TOKEN") {
-            Ok(v) => v,
-            Err(_) => return Err("Expected a token in the environment.")
+    pub fn build() -> std::result::Result<Config, Box<dyn Error>> {
+        let config_path: &str = match env::var("TEST") {
+            Ok(_) => "config.example.json",
+            Err(_) => "config.json"
         };
-        let intents: GatewayIntents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
 
-        let conf = Config {
-            token,
-            intents
-        };
+        let config_file = fs::read_to_string(config_path)?;
+        let conf: Config = serde_json::from_str(&config_file)?;
+
         Ok(conf)
     }
 }
@@ -106,5 +108,20 @@ impl EventHandler for Handler {
 
     async fn ready(&self, _: Context, ready: Ready) {
         println!("{} is connected.", ready.user.name);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ccnfig_build() {
+        let config: Config = Config::build().unwrap();
+        let conf: Config = Config {
+            token: String::from("your.token")
+        };
+
+        assert_eq!(conf.token, config.token);
     }
 }
