@@ -9,9 +9,15 @@ use serenity::prelude::*;
 
 use serde::Deserialize;
 
+mod message_pusher;
+use message_pusher::Mastodon;
+use message_pusher::message_pusher::MessagePusher;
+
+#[derive(Debug)]
 #[derive(Deserialize)]
 pub struct Config {
-    pub token: String
+    pub token: String,
+    pub mastodon: Mastodon
 }
 
 impl Config {
@@ -36,25 +42,19 @@ pub struct  Msg{
 impl Msg {
     pub fn new() -> Msg {
         Msg {
-            message: String::from(""),
-            attachment: String::from("")
+            message: String::new(),
+            attachment: String::new()
         }
     }
 
-    pub fn build_message(&self, msg: &Message) -> String {
-        let mut message: String;
+    pub fn build_message(&self, msg: &Message) -> Msg {
         let txt: Option<String> = self.get_content(&msg);
         let image: Option<String> = self.get_image(&msg);
 
-        if txt.is_none() && image.is_some() {
-            message = image.unwrap();
-        } else {
-            message = txt.unwrap();
-            message.push_str("\n");
-            message.push_str(
-                &image.unwrap_or_else(|| {String::from("")})
-            );
-        }
+        let message: Msg = Msg {
+            message: txt.unwrap_or_else( || {String::new()} ),
+            attachment: image.unwrap_or_else( || {String::new()} )
+        };
 
         message
     }
@@ -89,18 +89,22 @@ impl EventHandler for Handler {
         let myself: u64 = 1149630157913608246;
         let carl: u64 = 235148962103951360;
         let mesg: Msg = Msg::new();
+        let conf: Config = Config::build().unwrap();
 
         if msg.author.id == myself {
             println!("In: {}", msg.channel_id);
             println!("{}", msg.content);
             println!("\n");
-        }        
+        }
 
         if msg.author.id == carl {
             println!("Embed (star): {:?}\n", msg.embeds);
-            let desc: String = mesg.build_message(&msg);
+            let desc: Msg = mesg.build_message(&msg);
+            let pusher: MessagePusher = MessagePusher::build(desc, conf);
 
-            if let Err(why) = msg.channel_id.say(&ctx.http, desc).await {
+            let response: String = pusher.push().await.unwrap_or_else(|e| {e.to_string() + " WAS ERR"} );
+
+            if let Err(why) = msg.channel_id.say(&ctx.http, response).await {
                 println!("Error sending message: {:?}", why);
             }
         }
@@ -116,12 +120,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ccnfig_build() {
+    fn complete_ccnfig_build() {
+        let discord_token = "your.token";
         let config: Config = Config::build().unwrap();
-        let conf: Config = Config {
-            token: String::from("your.token")
-        };
 
-        assert_eq!(conf.token, config.token);
+        assert_eq!(discord_token, config.token);
+        assert_eq!("client.id", config.mastodon.client_id);
+        assert_eq!("client.secret", config.mastodon.client_secret);
+        assert_eq!("uri", config.mastodon.redirect_uri);
+        assert_eq!("jumbledtext", config.mastodon.auth_code);
+        assert_eq!("your_token", config.mastodon.token);
     }
 }

@@ -1,3 +1,10 @@
 {
-	"token":"your.token"
+	"token":"your.token",
+	"mastodon": {
+		"client_id":"client.id",
+		"client_secret":"client.secret",
+		"redirect_uri":"uri",
+		"auth_code":"jumbledtext",
+		"token":"your_token"
+	}
 }
