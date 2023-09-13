@@ -16,7 +16,7 @@ pub struct Mastodon {
 }
 
 impl Mastodon {
-    pub async fn send(&self, message: &Msg) -> std::result::Result<Response, Box<dyn Error>> {
+    pub async fn send(&self, message: &Msg) -> std::result::Result<String, Box<dyn Error>> {
         let endpoint: &str = "https://mastodon.social/api/v1/statuses";
         let params = [
             ("status", &message.message),
@@ -37,7 +37,11 @@ impl Mastodon {
             .send()
             .await?;
 
-        Ok(res)
+        let t = res.text().await?;
+        let v: Value = serde_json::from_str(t.as_str())?;
+        let o = v["url"].as_str();
+        let url: String = o.unwrap().to_string();
+        Ok(url)
     }
 
     async fn get_token(&self) -> Result<String, Box<dyn Error>> {
@@ -93,9 +97,9 @@ pub mod message_pusher {
 
         pub async fn push(&self) -> Result<String, Box<dyn Error>> {
             let msg = &self.message;
-            let res: Response = self.list.send(msg).await?;
+            let res: String = self.list.send(msg).await?;
 
-            Ok(res.text().await?)
+            Ok(res)
         }
     }
 }
