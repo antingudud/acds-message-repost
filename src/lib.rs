@@ -35,15 +35,15 @@ impl Config {
 }
 
 pub struct  Msg{
-    pub message: String,
-    pub attachment: String
+    pub message: Option<String>,
+    pub attachment: Option<String>
 }
 
 impl Msg {
     pub fn new() -> Msg {
         Msg {
-            message: String::new(),
-            attachment: String::new()
+            message: None,
+            attachment: None
         }
     }
 
@@ -52,8 +52,8 @@ impl Msg {
         let image: Option<String> = self.get_image(&msg);
 
         let message: Msg = Msg {
-            message: txt.unwrap_or_else( || {String::new()} ),
-            attachment: image.unwrap_or_else( || {String::new()} )
+            message: txt,
+            attachment: image
         };
 
         message
