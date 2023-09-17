@@ -92,26 +92,26 @@ impl EventHandler for Handler {
         let conf: Config = Config::build().unwrap();
 
         if msg.author.id == myself {
-            println!("In: {}", msg.channel_id);
-            println!("{}", msg.content);
+            println!("[Message Handler] INFO: New message in \"{}\"", msg.channel_id);
+            println!("\"{}\"", msg.content);
             println!("\n");
         }
 
         if msg.author.id == carl {
-            println!("Embed (star): {:?}\n", msg.embeds);
+            println!("[Message Handler] INFO: Embed (star):\n{:?}\n", msg.embeds);
             let desc: Msg = mesg.build_message(&msg);
             let pusher: MessagePusher = MessagePusher::build(desc, conf);
 
             let response: String = pusher.push().await.unwrap_or_else(|e| {e.to_string() + " WAS ERR"} );
 
             if let Err(why) = msg.channel_id.say(&ctx.http, response).await {
-                println!("Error sending message: {:?}", why);
+                println!("[Message Handler] ERROR: {:?}", why);
             }
         }
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected.", ready.user.name);
+        println!("[Startup] INFO: {} is online.", ready.user.name);
     }
 }
 

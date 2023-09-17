@@ -52,7 +52,7 @@ impl Mastodon {
         }
 
         let j = serde_json::to_string(&request);
-        println!("[message_pusher:send] INFO: request: {:?}", &j);
+        println!("[message_pusher:send] INFO: Request parameters: {:?}", &j);
         let res = client.post(endpoint)
             .bearer_auth(token)
             .json(&request)
@@ -82,13 +82,13 @@ impl Mastodon {
 
         let mut file = File::create("image_log").expect("Creation failed");
         file.write(&res).expect("Writing failed");
-        println!("[message_pusher:upload_image] INFO: Filed image get request");
+        println!("[message_pusher:upload_image] INFO: Created local copy of image from GET request");
 
         let form = reqwest::multipart::Form::new();
         let byte: Vec<u8> = Vec::from(res);
         let mut file = File::create("byte_log").expect("Creation failed");
         file.write(&byte).expect("Writing failed");
-        println!("[message_pusher:upload_image] INFO: Filed image bytes");
+        println!("[message_pusher:upload_image] INFO: Created local copy of image bytes");
         let part = Part::bytes(byte).file_name("image.png").mime_str("image/png");
         let form = form.part("file", part.unwrap());
 
@@ -128,7 +128,7 @@ impl Mastodon {
         ];
         let client: reqwest::Client = reqwest::Client::new();
 
-        println!("Auth code: {}", &self.auth_code);
+        println!("[message_pusher:get_token] INFO: Auth code: {}", &self.auth_code);
         let res = client.post(endpoint)
             .form(&params)
             .send()
@@ -141,7 +141,7 @@ impl Mastodon {
         let data: Value = serde_json::from_str(res.as_str())?;
         let t = data["access_token"].as_str();
         let token: String = t.unwrap().to_string();
-        println!("TOKEN COPY: {}", &token);
+        println!("[message_pusher:get_token] INFO: Please copy the token: {}", &token);
         Ok(token)
     }
 }
